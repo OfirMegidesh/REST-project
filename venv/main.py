@@ -1,4 +1,3 @@
-import json
 from flask import Flask
 from flask import render_template, request, redirect, url_for
 import logging
@@ -27,6 +26,28 @@ def users():
     logging.debug("opening the users html")
     return render_template('theUsersSite.html')
 
+@app.route('/users/put', methods=['PUT'])
+def users_put():
+    try:
+        real_id = request.form['real_id']
+        full_name = request.form['full_name']
+        password = request.form['password']
+        id = getconn().execute(f'SELECT id_AI FROM users WHERE real_id = {real_id}')
+        id_ai = ''
+        for row in id:
+            id = str(row)
+            for i in range(len(id)):
+                if id[i].isdigit():
+                    id_ai += id[i]
+        getconn().execute(f'UPDATE users SET full_name = {full_name}, password = {password} WHERE id_AI = {id_ai}')
+        getconn().commit()
+        logging.debug(f'updating the user with the id {real_id}')
+        getconn().close()
+        return 'the update succeeded'
+    except:
+        logging.debug('oh no something went wrong')
+        return render_template('error.html')
+
 
 @app.route('/users', methods=['GET', 'POST'])
 def users_get_post():
@@ -51,7 +72,6 @@ def users_get_post():
             full_name = request.form['full name']
             password = request.form['psw']
             user_id = request.form['id']
-            print('post' + user_id)
             conn.execute(
                 f'INSERT INTO users (full_name, password, real_id) VALUES ("{full_name}","{password}","{user_id}")')
             conn.commit()
@@ -120,38 +140,6 @@ def user_g_d(id):
         logging.debug("oh no something went wrong")
         return render_template('error.html')
 
-########### the first problem###########
-@app.route('/users/put', methods=['PUT'])
-def users_put():
-    print('here')
-    try:
-        print(1)
-        # request to update a user that's already exist
-        full_name = request.form['fullname_p']
-        print(2)
-        password = request.form['psw_p']
-        print(3)
-        real_id = request.form['id_p']
-        print(4)
-        logging.debug(f"updating the user where the id is {real_id}")
-        conn = getconn()
-        id = f'SELECT id_AI FROM users WHERE real_id = "{real_id}"'
-        id_ai = ''
-        for row in id:
-            id = str(row)
-            for i in range(len(id)):
-                if id[i].isdigit():
-                    id_ai += id[i]
-        conn.execute(
-            f'UPDATE users SET full_name = "{full_name}", password = "{password}", real_id = "{real_id}" WHERE id_AI = {id_ai}')
-        conn.commit()
-        conn.close()
-        return 'action completed'
-    except:
-        print(5)
-        logging.debug("oh no something went wrong")
-        return render_template('error.html')
-
 
 @app.route('/home_tickets', methods=['GET'])
 def tickets():
@@ -178,6 +166,33 @@ def tickets_post():
             getconn().commit()
             getconn().close()
             return 'the action completed'
+    except:
+        logging.debug("oh no something went wrong")
+        return render_template('error.html')
+
+
+#####the second problem#####
+# request to delete a ticket according to a given id
+@app.route('/tickets/delete', methods=['DELETE'])
+def delete_ticket():
+    try:
+        ticket_id = request.form['ticket_id']
+        logging.debug(f'deleting the ticket where the id = {ticket_id}')
+        fli_id = getconn().execute(f'SELECT flight_id FROM tickets WHERE ticket_id = {ticket_id}')
+        flight_id = ''
+        for row in fli_id:
+            id = str(row)
+            for i in range(len(id)):
+                if id[i].isdigit():
+                    flight_id += id[i]
+        getconn().execute(f'DELETE FROM tickets WHERE ticket_id  = {ticket_id}')
+        getconn().commit()
+        getconn().execute(
+            f'UPDATE flights set remaining_seats = (SELECT remaining_seats FROM flights WHERE flight_id = {flight_id}) +1')
+        getconn().commit()
+        getconn().close()
+        return 'the action completed'
+
     except:
         logging.debug("oh no something went wrong")
         return render_template('error.html')
@@ -234,26 +249,6 @@ def ticket_get1(t_id):
         logging.debug("oh no something went wrong")
         return render_template('error.html')
 
-########### this is the second problem###########
-@app.route('/tickets/delete', methods=['DELETE'])
-def ticket_delete():
-    try:
-        # request to delete a ticket according to a given id
-        if request.method == 'DELETE':
-            id = request.form['id']
-            logging.debug(f"deleting the ticket where id={id}")
-            flight_id = getconn().execute(f'SELECT flight_id FROM tickets WHERE ticket_id = {id}')
-            getconn().execute(f'DELETE FROM tickets WHERE ticket_id  = {id}')
-            getconn().commit()
-            getconn().execute(
-                f'UPDATE flights set remaining_seats = (SELECT remaining_seats FROM flights WHERE flight_id = {flight_id}) +1')
-            getconn().commit()
-            getconn().close()
-            return 'the action completed'
-    except:
-        logging.debug("oh no something went wrong")
-        return render_template('error.html')
-
 
 @app.route('/flights_home', methods=['GET'])
 def flights_page():
@@ -262,6 +257,27 @@ def flights_page():
         return render_template('theFlightSite.html')
     except:
         logging.debug("oh no something went wrong")
+        return render_template('error.html')
+
+
+###########this is the last problem###########
+# request to update a flight that's already exist
+@app.route('/flights/put', methods=['PUT'])
+def flights_put():
+    try:
+        flight_id = request.form['flight_id']
+        timestamp = request.form['timestamp']
+        remaining_seats = request.form['remaining_seats']
+        origin_country_id = request.form['origin_country_id']
+        dest_country_id = request.form['dest_country_id']
+        getconn().execute(
+            f'UPDATE flights SET timestamp = \'{timestamp}\', remaining_seats = {remaining_seats}, origin_country_id = {origin_country_id}, dest_country_id = {dest_country_id} WHERE flight_id = {flight_id}')
+        getconn().commit()
+        getconn().close()
+        logging.debug(f'updating the flight where the id = {flight_id}')
+        return 'the update succeeded'
+    except:
+        logging.debug('oh no something went wrong')
         return render_template('error.html')
 
 
@@ -324,28 +340,6 @@ def flights_get_delete(flight_id):
             getconn().commit()
             getconn().close()
             return 'the action completed'
-    except:
-        logging.debug("oh no something went wrong")
-        return render_template('error.html')
-
-
-###########this is the last problem###########
-@app.route('/flights/put', methods=['PUT'])
-def flights_put():
-    try:
-        # request to update a flight that's already exist
-        if request.method == 'PUT':
-            flight_id = request.form['id']
-            timestamp = request.form['time']
-            remaining_seats = request.form['remaining seats']
-            origin_country_id = request.form['original country id']
-            dest_country_id = request.form['destination country id']
-            getconn().execute(
-                f'UPDATE flights SET timestamp = {timestamp}, origin_country_id = {origin_country_id}, dest_country_id = {dest_country_id}, remaining_seats = {remaining_seats} WHERE flight_id = {flight_id}')
-            getconn().commit()
-            getconn().close()
-            logging.debug(f"updating the flight where the id = {flight_id}")
-            return 'the update succeeded'
     except:
         logging.debug("oh no something went wrong")
         return render_template('error.html')
