@@ -37,12 +37,12 @@
 </form>
 <h1>TO UPDATE A FLIGHT:</h1>
 <form action="http://127.0.0.1:5000/flights/put" method="PUT">
-    <p> FLIGHT ID <input type="number" name="id" required> </p>
-    <p>  TIME <input type="text" name="time" required></p>
-    <p> REMAINING SEATS <input type="number" name="remaining seats" required> </p>
-    <p> ORIGINAL COUNTRY ID <input type="number" name="original country id" required> </p>
-    <p> DESTINATION COUNTRY ID <input type="number" name="destination country id" required> </p>
-    <button type= "submit"> submit </button>
+    <p> FLIGHT ID <input type="number" name="flight_id"> </p>
+    <p> TIME <input type="text" name="timestamp"> </p>
+    <p>REMAINING SEATS <input type="number" name="remaining_seats"></p>
+    <p>ORIGINAL COUNTRY ID <input type="number" name="origin_country_id"></p>
+    <p>DESTINATION COUNTRY ID <input type="number" name="dest_country_id"></p>
+    <button type="submit"> submit </button>
 </form>
 </body>
 </html>
