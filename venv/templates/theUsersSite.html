@@ -30,8 +30,8 @@
 </nav>
 <h1>LOG IN:</h1>
     <form action="http://127.0.0.1:5000/sign_in" method="POST">
-        <p> ID <input type="number" name="id" required> </p>
-        <p> PASSWORD <input type="password" name="psw" required></p>
+        <p> ID <input type="number" name="id_g" required> </p>
+        <p> PASSWORD <input type="password" name="psw_g" required></p>
         <button type= "submit" > submit  </button>
     </form>
 
@@ -39,17 +39,18 @@
 <h1>SIGN IN:</h1>
 <form action="http://127.0.0.1:5000/users" method="POST">
         <p> ID <input type="number" name="id" required> </p>
-        <p> FULL NAME <input type="text" name="fullname" required> </p>
+        <p> FULL NAME <input type="text" name="full name" required> </p>
         <p> PASSWORD <input type="password" name="psw" required></p>
         <button type= "submit"> submit </button>
     </form>
 <h1>TO UPDATE A USER:</h1>
 <form action="http://127.0.0.1:5000/users/put" method="PUT">
-        <p> ID <input type="number" name="id_p" required> </p>
-        <p> FULL NAME <input type="text" name="fullname_p" required> </p>
-        <p> PASSWORD <input type="password" name="psw_p" required></p>
+        <p> ID <input type="number" name="real_id" required> </p>
+        <p> FULL NAME <input type="text" name="full_name" required> </p>
+        <p> PASSWORD <input type="password" name="password" required></p>
     <button type="submit">submit</button>
     </form>
+</form>
 
 </body>
 </html>
