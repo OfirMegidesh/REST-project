@@ -26,23 +26,26 @@ def users():
     logging.debug("opening the users html")
     return render_template('theUsersSite.html')
 
+
+#### the first problem ####
 @app.route('/users/put', methods=['PUT'])
 def users_put():
     try:
         real_id = request.form['real_id']
         full_name = request.form['full_name']
         password = request.form['password']
-        id = getconn().execute(f'SELECT id_AI FROM users WHERE real_id = {real_id}')
+        conn = getconn()
+        id = conn.execute(f'SELECT id_AI FROM users WHERE real_id = {real_id}')
         id_ai = ''
         for row in id:
             id = str(row)
             for i in range(len(id)):
                 if id[i].isdigit():
                     id_ai += id[i]
-        getconn().execute(f'UPDATE users SET full_name = {full_name}, password = {password} WHERE id_AI = {id_ai}')
-        getconn().commit()
+        conn.execute(f'UPDATE users SET full_name = {full_name}, password = {password} WHERE id_AI = {id_ai}')
+        conn.commit()
         logging.debug(f'updating the user with the id {real_id}')
-        getconn().close()
+        conn.close()
         return 'the update succeeded'
     except:
         logging.debug('oh no something went wrong')
@@ -156,15 +159,16 @@ def tickets_post():
     try:
         # request to create a new ticket
         if request.method == 'POST':
+            conn = getconn()
             flight_id = request.form['flight id']
             logging.debug(
                 f"printing to the user {id_ai} all the available flights and adding the ticket to flight num {flight_id}")
-            getconn().execute(f'INSERT INTO tickets (user_id, flight_id) VALUES ({id_ai},{flight_id})')
-            getconn().commit()
-            getconn().execute(
+            conn.execute(f'INSERT INTO tickets (user_id, flight_id) VALUES ({id_ai},{flight_id})')
+            conn.commit()
+            conn.execute(
                 f'UPDATE flights set remaining_seats = (SELECT remaining_seats FROM flights WHERE flight_id = {flight_id}) -1')
-            getconn().commit()
-            getconn().close()
+            conn.commit()
+            conn.close()
             return 'the action completed'
     except:
         logging.debug("oh no something went wrong")
@@ -176,6 +180,7 @@ def tickets_post():
 @app.route('/tickets/delete', methods=['DELETE'])
 def delete_ticket():
     try:
+        conn = getconn()
         ticket_id = request.form['ticket_id']
         logging.debug(f'deleting the ticket where the id = {ticket_id}')
         fli_id = getconn().execute(f'SELECT flight_id FROM tickets WHERE ticket_id = {ticket_id}')
@@ -185,12 +190,12 @@ def delete_ticket():
             for i in range(len(id)):
                 if id[i].isdigit():
                     flight_id += id[i]
-        getconn().execute(f'DELETE FROM tickets WHERE ticket_id  = {ticket_id}')
-        getconn().commit()
-        getconn().execute(
+        conn.execute(f'DELETE FROM tickets WHERE ticket_id  = {ticket_id}')
+        conn.commit()
+        conn.execute(
             f'UPDATE flights set remaining_seats = (SELECT remaining_seats FROM flights WHERE flight_id = {flight_id}) +1')
-        getconn().commit()
-        getconn().close()
+        conn.commit()
+        conn.close()
         return 'the action completed'
 
     except:
@@ -203,7 +208,8 @@ def tickets_get():
     try:
         # request for all the tickets
         logging.debug("returning all the tickets ")
-        tickets = getconn().execute(f'SELECT * FROM tickets')
+        conn = getconn()
+        tickets = conn.execute(f'SELECT * FROM tickets')
         variable = ""
         for row in tickets:
             a = f'ticket_id:{row[0]}, user_id:{row[1]}, flight_id:{row[2]}\n'
@@ -219,13 +225,14 @@ def ticket_get():
     try:
         # request of a tickets of a specific user.
         if request.method == 'GET':
+            conn = getconn()
             logging.debug(f"returning the tickets of the user {id_ai}")
-            ticket = getconn().execute(f'SELECT * FROM tickets WHERE user_id = {id_ai}')
+            ticket = conn.execute(f'SELECT * FROM tickets WHERE user_id = {id_ai}')
             variable = ""
             for row in ticket:
                 a = f'ticket_id:{row[0]}, user_id:{row[1]}, flight_id:{row[2]}|||||\n'
                 variable = variable + a
-            getconn().close()
+            conn.close()
             return variable
     except:
         logging.debug("oh no something went wrong")
@@ -237,13 +244,14 @@ def ticket_get1(t_id):
     try:
         # request of a specific ticket
         if request.method == 'GET':
+            conn = getconn()
             logging.debug(f"returning the ticket where the id={t_id}")
-            ticket = getconn().execute(f'SELECT * FROM tickets WHERE ticket_id = {t_id}')
-            getconn().close()
+            ticket = conn.execute(f'SELECT * FROM tickets WHERE ticket_id = {t_id}')
             variable = ""
             for row in ticket:
                 a = f'ticket_id:{row[0]}, user_id:{row[1]}, flight_id:{row[2]}|||||\n'
                 variable = variable + a
+            conn.close()
             return variable
     except:
         logging.debug("oh no something went wrong")
@@ -265,15 +273,15 @@ def flights_page():
 @app.route('/flights/put', methods=['PUT'])
 def flights_put():
     try:
+        conn = getconn()
         flight_id = request.form['flight_id']
         timestamp = request.form['timestamp']
         remaining_seats = request.form['remaining_seats']
         origin_country_id = request.form['origin_country_id']
         dest_country_id = request.form['dest_country_id']
-        getconn().execute(
-            f'UPDATE flights SET timestamp = \'{timestamp}\', remaining_seats = {remaining_seats}, origin_country_id = {origin_country_id}, dest_country_id = {dest_country_id} WHERE flight_id = {flight_id}')
-        getconn().commit()
-        getconn().close()
+        conn.execute(f'UPDATE flights SET timestamp = \'{timestamp}\', remaining_seats = {remaining_seats}, origin_country_id = {origin_country_id}, dest_country_id = {dest_country_id} WHERE flight_id = {flight_id}')
+        conn.commit()
+        conn.close()
         logging.debug(f'updating the flight where the id = {flight_id}')
         return 'the update succeeded'
     except:
@@ -286,9 +294,10 @@ def flights_get_post():
     try:
         # request for all the flights
         if request.method == 'GET':
+            conn = getconn()
             logging.debug("returning all the flights that's available")
-            flights = getconn().execute(f'SELECT * FROM flights WHERE remaining_seats > 0')
-            getconn().close()
+            flights = conn.execute(f'SELECT * FROM flights WHERE remaining_seats > 0')
+            conn.close()
             variable = ""
             for row in flights:
                 a = f'flight_id:{row[0]}, timestamp:{row[1]}, remaining_seats:{row[2]}, original_country_id:{row[3]}, dest_country_id:{row[4]}|||\n'
@@ -300,14 +309,14 @@ def flights_get_post():
     try:
         # request to create a new flight
         if request.method == 'POST':
+            conn = getconn()
             timestamp = request.form['time']
             remaining_seats = request.form['remaining seats']
             origin_country_id = request.form['original country id']
             dest_country_id = request.form['destination country id']
-            getconn().execute(
-                f'INSERT INTO flights(timestamp, origin_country_id, dest_country_id, remaining_seats) VALUES(\'{timestamp}\',{origin_country_id},{dest_country_id}, {remaining_seats})')
-            getconn().commit()
-            getconn().close()
+            conn.execute(f'INSERT INTO flights(timestamp, origin_country_id, dest_country_id, remaining_seats) VALUES(\'{timestamp}\',{origin_country_id},{dest_country_id}, {remaining_seats})')
+            conn.commit()
+            conn.close()
             logging.debug(f"posting a new flight")
             return 'the action completed'
 
@@ -321,13 +330,14 @@ def flights_get_delete(flight_id):
     try:
         # request of a specific flight
         if request.method == 'GET':
+            conn = getconn()
             logging.debug(f"getting the flights with the id {flight_id}")
-            flight = getconn().execute(f'SELECT * FROM flights WHERE flight_id = {flight_id}')
+            flight = conn.execute(f'SELECT * FROM flights WHERE flight_id = {flight_id}')
             variable = ""
             for row in flight:
                 a = f'flight_id:{row[0]}, timestamp:{row[1]}, remaining_seats:{row[2]}, original_country_id:{row[3]}, dest_country_id:{row[4]}|||\n'
                 variable = variable + a
-            getconn().close()
+            conn.close()
             return variable
     except:
         logging.debug("oh no something went wrong")
@@ -335,10 +345,11 @@ def flights_get_delete(flight_id):
     try:
         # request to delete a flight according to a given id
         if request.method == 'DELETE':
+            conn = getconn()
             logging.debug(f"deleting the flights with the id {flight_id}")
-            getconn().execute(f'DELETE FROM flights WHERE flight_id = {flight_id}')
-            getconn().commit()
-            getconn().close()
+            conn.execute(f'DELETE FROM flights WHERE flight_id = {flight_id}')
+            conn.commit()
+            conn.close()
             return 'the action completed'
     except:
         logging.debug("oh no something went wrong")
