@@ -3,7 +3,7 @@ from flask import render_template, request, redirect, url_for
 import logging
 import sqlite3
 
-# filename='page.log',
+filename='page.log',
 logging.basicConfig(level=logging.DEBUG)
 
 
@@ -27,8 +27,7 @@ def users():
     return render_template('theUsersSite.html')
 
 
-#### the first problem ####
-@app.route('/users/put', methods=['PUT'])
+@app.route('/users/put', methods=['POST'])
 def users_put():
     try:
         real_id = request.form['real_id']
@@ -42,7 +41,7 @@ def users_put():
             for i in range(len(id)):
                 if id[i].isdigit():
                     id_ai += id[i]
-        conn.execute(f'UPDATE users SET full_name = {full_name}, password = {password} WHERE id_AI = {id_ai}')
+        conn.execute(f'UPDATE users SET full_name = "{full_name}", password = "{password}" WHERE id_AI = {id_ai}')
         conn.commit()
         logging.debug(f'updating the user with the id {real_id}')
         conn.close()
@@ -175,9 +174,9 @@ def tickets_post():
         return render_template('error.html')
 
 
-#####the second problem#####
+
 # request to delete a ticket according to a given id
-@app.route('/tickets/delete', methods=['DELETE'])
+@app.route('/tickets/delete', methods=['POST'])
 def delete_ticket():
     try:
         conn = getconn()
@@ -268,9 +267,8 @@ def flights_page():
         return render_template('error.html')
 
 
-###########this is the last problem###########
 # request to update a flight that's already exist
-@app.route('/flights/put', methods=['PUT'])
+@app.route('/flights/put', methods=['POST'])
 def flights_put():
     try:
         conn = getconn()
