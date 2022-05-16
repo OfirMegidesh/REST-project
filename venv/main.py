@@ -137,7 +137,7 @@ def user_g_d(id):
             conn.execute(f'DELETE FROM users WHERE  id_AI = {id}')
             conn.commit()
             conn.close()
-            return 'the ticket have been deleted'
+            return 'the user have been deleted'
     except:
         logging.debug("oh no something went wrong")
         return render_template('error.html')
